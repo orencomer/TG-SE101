@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=TGWorkShopCase123
+    ports: ["1433:1433"]
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P TGWorkShopCase123 -Q 'SELECT 1'"]
+      interval: 10s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: ./ECommerce.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Server=sqlserver;Database=ECommerceDb;User Id=sa;Password=TGWorkShopCase123;TrustServerCertificate=True;
+    ports: ["8080:8080"]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+volumes:
+  mssql-data:
